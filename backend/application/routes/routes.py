@@ -1,5 +1,5 @@
 from backend.application.utils.rag import DocReader
-from fastapi import FastAPI, APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
 import uuid
 

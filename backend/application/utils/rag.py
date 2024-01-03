@@ -9,12 +9,12 @@ from langchain import hub
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
-from langchain_core.runnables import RunnableParallel
+# from langchain_core.runnables import RunnableParallel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import PromptTemplate
+# from langchain.memory import ConversationBufferMemory
+# from langchain.prompts import PromptTemplate
 from typing import IO, Union
 from pathlib import Path
 
