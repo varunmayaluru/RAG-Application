@@ -29,6 +29,7 @@ class DocReader:
 
     def __init__(self, file: Union[IO[bytes], Path]):
         self.file_path = file
+        self.name = file.name
         self.chat_history = []
         self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
@@ -43,7 +44,7 @@ class DocReader:
         # join all the pages into one string
         pages = "\n\n".join(pages)
         # create a document object
-        doc = [Document(page_content=pages, metadata={"source": str(self.file_path)})]
+        doc = [Document(page_content=pages, metadata={"source": str(self.name)})]
         return doc
 
     def split_text(self, doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):
@@ -168,6 +169,7 @@ if __name__ == "__main__":
     response_2 = doc_reader.ask_contextual_question(rag_chain, "What are it's benefits?")
     print(response_1)
     print(response_2)
+    print(doc)
     
     
     
