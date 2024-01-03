@@ -3,7 +3,7 @@ from pathlib import Path
 from PyPDF2 import PdfReader
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
+# from langchain_community.vectorstores import Chroma
 from langchain.embeddings import OpenAIEmbeddings
 from langchain import hub
 from langchain_community.chat_models import ChatOpenAI
@@ -13,10 +13,12 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage
 from langchain_core.output_parsers import StrOutputParser
+from langchain.vectorstores import Qdrant
 # from langchain.memory import ConversationBufferMemory
 # from langchain.prompts import PromptTemplate
 from typing import IO, Union
 from pathlib import Path
+from backend.application.utils.utils import get_hash_value
 
 from dotenv import load_dotenv
 import os
@@ -43,8 +45,10 @@ class DocReader:
             pages.append(text)
         # join all the pages into one string
         pages = "\n\n".join(pages)
+        # calculate hash value of the content
+        hash_value = get_hash_value(pages)
         # create a document object
-        doc = [Document(page_content=pages, metadata={"source": str(self.name)})]
+        doc = [Document(page_content=pages, metadata={"source": str(self.name), "hash_value": hash_value})]
         return doc
 
     def split_text(self, doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):
@@ -53,10 +57,18 @@ class DocReader:
         return splits
     
     def create_vector_store(self,splits: List[Document]):
-        vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings(disallowed_special=()))
+        # vectorstore = Chroma.from_documents(documents=splits, embedding=OpenAIEmbeddings(disallowed_special=()))
+        vectorstore = Qdrant.from_documents(
+                            splits,
+                            OpenAIEmbeddings(disallowed_special=()),
+                            url=os.getenv("QDRANT_URL"),
+                            prefer_grpc=True,
+                            api_key=os.getenv("QDRANT_API_KEY"),
+                            collection_name="my_documents",
+                        )
         return vectorstore
 
-    def create_retriever(self, vectorstore: Chroma):
+    def create_retriever(self, vectorstore: Qdrant):
         retriever = vectorstore.as_retriever(search_type="similarity_score_threshold", search_kwargs={"score_threshold": 0.5})
         return retriever
     
