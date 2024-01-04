@@ -45,13 +45,13 @@ async def upload_pdfs(files: list[UploadFile] = File(...)):
         docs = doc_reader.pdf_loader()
         splits = doc_reader.split_text(docs)
         # Check if any split has a hash value already present in validate_qdrant_scroll_results
-        if any(validate_qdrant_scroll_results(QDRANT_URL,QDRANT_API_KEY, "my_documents" ,split.metadata['hash_value'],1) for split in splits):
+        if any(validate_qdrant_scroll_results(QDRANT_URL,QDRANT_API_KEY, "my_documents" ,split.metadata.get("hash"),1) for split in splits):
             already_uploaded_files.append(file.filename)
             continue
         all_splits.extend(splits)
     print(already_uploaded_files)
     if already_uploaded_files:
-        return {"message": f"The following files are already uploaded: {', '.join(already_uploaded_files)}"}
+        return {"message": f"The following files are already uploaded: {', '.join(already_uploaded_files)}", "id": unique_id}
 
     vectorstore = doc_reader.create_vector_store(all_splits)
     retriever = doc_reader.create_retriever(vectorstore)

@@ -48,7 +48,7 @@ class DocReader:
         # calculate hash value of the content
         hash_value = get_hash_value(pages)
         # create a document object
-        doc = [Document(page_content=pages, metadata={"source": str(self.name), "hash_value": hash_value})]
+        doc = [Document(page_content=pages, metadata={"source": str(self.name), "hash": hash_value})]
         return doc
 
     def split_text(self, doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):
