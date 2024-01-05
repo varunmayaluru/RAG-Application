@@ -4,6 +4,8 @@ from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 from typing import Optional
 from dotenv import load_dotenv
 import os
+import streamlit as st
+import uuid
 
 load_dotenv()
 
@@ -61,3 +63,12 @@ def validate_qdrant_scroll_results(url: str, api_key: str, collection_name: str,
         # Handle potential errors gracefully
         print(f"An error occurred: {e}")
         return None
+
+def get_or_create_session_id():
+    if 'session_id' not in st.session_state:
+        st.session_state['session_id'] = str(uuid.uuid4())
+    return st.session_state
+
+if __name__ == "__main__":
+    # call get_or_create_session_id to create a session_id
+    print(get_or_create_session_id())
