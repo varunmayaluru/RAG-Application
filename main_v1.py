@@ -68,19 +68,29 @@ def main():
                 else:
                     st.warning('Please upload at least one file.')
     
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = []
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
 
     with st.chat_message("assistant"):
         st.write("Hello 👋 Welcome to Chat with your Document")
+
+    # Display the chat messages from history on app rerun
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
             
     message_placeholder = st.empty()  # Create the message_placeholder outside the loop
 
-    prompt = st.chat_input("Ask your document 💭")
-    if prompt:
+    # prompt = st.chat_input("Ask your document 💭")
+    if prompt:= st.chat_input("Ask your document 💭"):
         # Add the user's message to the chat history
         st.session_state.messages.append({"role": "user", "content": prompt})
-
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        # Display assistant response in chat message container
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
         # URL of your FastAPI endpoint
         url = 'http://127.0.0.1:8000/ask-question'
 
@@ -88,34 +98,13 @@ def main():
             "token": str(st.session_state['token']),
             "question": str(prompt)
         }
+
         # Send a request to the API and get the response
         response = requests.post(url, json=data)
-
-        # # Handle the response
-        # if response.status_code == 200:
-        #     print("success")
-        #     # st.success('Question asked successfully!')
-        #     # st.json(response.json())
-        # else:
-        #     st.error('An error occurred while asking the question.')
-
-        # Display the response in the chat message container
-        # full_response = ""
-        # for i in range(0, len(response.json()["response"]), 300):
-        #     full_response += response.json()["response"][i:i+300] + "\n"
-        #     message_placeholder.markdown(full_response + "|")
-        st.session_state.messages.append({"role": "assistant", "content": response.json()["response"]})
-
-        # # Add the user's message to the chat history
-        # st.session_state.messages.append({"role": "user", "content": prompt})
-
-        # # Add the response to the chat history
-        # st.session_state.messages.append({"role": "assistant", "content": full_response})
-        # Display the chat messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
+        full_response += response.json()["response"]
+        message_placeholder.markdown(full_response)
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
 
 if __name__ == "__main__":
     main()
+
