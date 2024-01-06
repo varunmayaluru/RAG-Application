@@ -1,6 +1,6 @@
 # import required libraries
 from fastapi import FastAPI
-from backend.application.routes.routes_v1 import pdf_reader_router
+from backend.application.routes.routes import pdf_reader_router
 from dotenv import load_dotenv
 import os
 
