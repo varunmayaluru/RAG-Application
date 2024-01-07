@@ -19,6 +19,7 @@ from langchain.vectorstores import Qdrant
 from typing import IO, Union
 from pathlib import Path
 from backend.application.utils.utils import get_hash_value
+from docx import Document as Docxreader
 
 from dotenv import load_dotenv
 import os
@@ -49,6 +50,32 @@ class DocReader:
         hash_value = get_hash_value(pages)
         # create a document object
         doc = [Document(page_content=pages, metadata={"source": str(self.name), "hash": hash_value})]
+        return doc
+    
+    def docx_loader(self) -> List[Document]:
+        # read the Word document
+        docx_reader = Docxreader(self.file_path)
+        paragraphs = []
+        # loop through the paragraphs
+        for paragraph in docx_reader.paragraphs:
+            text = paragraph.text
+            paragraphs.append(text)
+        # join all the paragraphs into one string
+        paragraphs = "\n\n".join(paragraphs)
+        # calculate hash value of the content
+        hash_value = get_hash_value(paragraphs)
+        # create a document object
+        doc = [Document(page_content=paragraphs, metadata={"source": str(self.name), "hash": hash_value})]
+        return doc
+    
+    def txt_loader(self) -> List[Document]:
+        # read the text file
+        self.file_path.seek(0)  # ensure you're at the start of the file
+        content = self.file_path.read().decode()  # decode from bytes to string if necessary
+        # calculate hash value of the content
+        hash_value = get_hash_value(content)
+        # create a document object
+        doc = [Document(page_content=content, metadata={"source": str(self.name), "hash": hash_value})]
         return doc
 
     def split_text(self, doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):

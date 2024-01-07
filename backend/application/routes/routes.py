@@ -5,6 +5,7 @@ import uuid
 from dotenv import load_dotenv
 import os
 from backend.application.utils.rag import DocReader
+from typing import List
 
 # Load environment variables
 load_dotenv()
@@ -27,17 +28,47 @@ pdf_reader_router = APIRouter()
 # Global data store
 global_data_store = {}
 
+# @pdf_reader_router.post("/pdf-reader", response_model=PDFUploadResponse)
+# async def upload_pdfs(files: list[UploadFile] = File(...)):
+#     unique_id = str(uuid.uuid4())
+#     all_splits = []
+#     for file in files:
+#         doc_reader = DocReader(file=file.file)
+#         docs = doc_reader.pdf_loader()
+#         splits = doc_reader.split_text(docs)
+#         all_splits.extend(splits)
+
+#     # Process the PDF and store the session data
+#     vectorstore = doc_reader.create_vector_store(all_splits)
+#     retriever = doc_reader.create_retriever(vectorstore)
+#     prompt = doc_reader.create_qa_prompt()
+#     llm = doc_reader.create_llm()
+#     rag_chain = doc_reader.create_rag_chain_with_history(doc_reader.contextualized_question, retriever, doc_reader.format_docs, prompt, llm)
+#     global_data_store[unique_id] = (rag_chain, doc_reader)
+
+#     return {"message": "PDFs processed", "token": unique_id}
+
 @pdf_reader_router.post("/pdf-reader", response_model=PDFUploadResponse)
-async def upload_pdfs(files: list[UploadFile] = File(...)):
+async def upload_pdfs(files: List[UploadFile] = File(...)):
     unique_id = str(uuid.uuid4())
     all_splits = []
     for file in files:
         doc_reader = DocReader(file=file.file)
-        docs = doc_reader.pdf_loader()
+        # get the file extension
+        _, file_extension = os.path.splitext(file.filename)
+        # load the document based on the file extension
+        if file_extension == '.pdf':
+            docs = doc_reader.pdf_loader()
+        elif file_extension in ['.docx', '.doc']:
+            docs = doc_reader.docx_loader()
+        elif file_extension == '.txt':
+            docs = doc_reader.txt_loader()
+        else:
+            continue  # skip files with unknown extensions
         splits = doc_reader.split_text(docs)
         all_splits.extend(splits)
 
-    # Process the PDF and store the session data
+    # Process the document and store the session data
     vectorstore = doc_reader.create_vector_store(all_splits)
     retriever = doc_reader.create_retriever(vectorstore)
     prompt = doc_reader.create_qa_prompt()
@@ -45,7 +76,7 @@ async def upload_pdfs(files: list[UploadFile] = File(...)):
     rag_chain = doc_reader.create_rag_chain_with_history(doc_reader.contextualized_question, retriever, doc_reader.format_docs, prompt, llm)
     global_data_store[unique_id] = (rag_chain, doc_reader)
 
-    return {"message": "PDFs processed", "token": unique_id}
+    return {"message": "Documents processed", "token": unique_id}
 
 @pdf_reader_router.post("/ask-question", response_model=AskQuestionResponse)
 async def ask_question(request: AskQuestionRequest):
