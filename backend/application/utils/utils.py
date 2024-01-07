@@ -6,6 +6,12 @@ from dotenv import load_dotenv
 import os
 import streamlit as st
 import uuid
+import requests
+from bs4 import BeautifulSoup
+from hashlib import md5
+from typing import List
+from langchain.docstore.document import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 load_dotenv()
 
@@ -69,6 +75,63 @@ def get_or_create_session_id():
         st.session_state['session_id'] = str(uuid.uuid4())
     return st.session_state
 
+def url_loader(url: str) -> List[Document]:
+        # Send a GET request to the URL
+        response = requests.get(url)
+        
+        # Check if the response is successful and the content type is HTML
+        if response.status_code == 200 and 'text/html' in response.headers['Content-Type']:
+            # Parse HTML content using BeautifulSoup
+            soup = BeautifulSoup(response.content, 'html.parser')
+            
+            # Extract text from the parsed HTML
+            text = soup.get_text(separator='\n')
+            
+            # Calculate hash value of the content
+            hash_value = md5(text.encode()).hexdigest()
+
+            # Create and return a list containing a Document object
+            return [Document(page_content=text, metadata={"source": url, "hash": hash_value})]
+        else:
+            # Return an empty list if the URL does not point to an HTML document or the request failed
+            return []
+        
+def split_text(doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, add_start_index=True)
+    splits = text_splitter.split_documents(doc)
+    return splits
+
+def main():
+    url = st.text_input("Or enter a URL here and click on Process", type  = "default")
+    data = {"url": url} if url else {}
+    url = data.get('url')
+    docs = url_loader(url)
+    texts, metadatas = [], []
+    for doc in docs:
+        texts.append(doc.page_content)
+        metadatas.append(doc.metadata)
+    st.write(texts)
+    st.write(metadatas)
+    
+
+# def split_documents(self, documents: Iterable[Document]) -> List[Document]:
+#         """Split documents."""
+#         texts, metadatas = [], []
+#         for doc in documents:
+#             texts.append(doc.page_content)
+#             metadatas.append(doc.metadata)
+#         return self.create_documents(texts, metadatas=metadatas)
+
+def split_text(doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, add_start_index=True)
+        splits = text_splitter.split_documents(doc)
+        return splits
+
 if __name__ == "__main__":
     # call get_or_create_session_id to create a session_id
-    print(get_or_create_session_id())
+    # print(get_or_create_session_id())
+    # call url_loader to load the url
+    # docs = url_loader("https://www.ghx.com/the-healthcare-hub/healthcare-inventory-management/")
+    # splits = split_text(docs)
+    # print(splits[0])
+    main()

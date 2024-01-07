@@ -16,10 +16,14 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain.vectorstores import Qdrant
 # from langchain.memory import ConversationBufferMemory
 # from langchain.prompts import PromptTemplate
-from typing import IO, Union
+from typing import IO, Union, Optional
 from pathlib import Path
 from backend.application.utils.utils import get_hash_value
 from docx import Document as Docxreader
+
+import requests
+from bs4 import BeautifulSoup
+from hashlib import md5
 
 from dotenv import load_dotenv
 import os
@@ -30,9 +34,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 class DocReader:
 
-    def __init__(self, file: Union[IO[bytes], Path]):
+    def __init__(self, file: Optional[Union[IO[bytes], Path]] = None):
         self.file_path = file
-        self.name = file.name
+        self.name = file.name if file else None
         self.chat_history = []
         self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
@@ -77,9 +81,20 @@ class DocReader:
         # create a document object
         doc = [Document(page_content=content, metadata={"source": str(self.name), "hash": hash_value})]
         return doc
+    
+    def url_loader(self, url: str) -> List[Document]:
+        response = requests.get(url)
+        if response.status_code == 200 and 'text/html' in response.headers['Content-Type']:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            text = soup.get_text(separator='\n')
+            hash_value = md5(text.encode()).hexdigest()
+            return [Document(page_content=text, metadata={"source": url, "hash": hash_value})]
+        else:
+            return []
 
     def split_text(self, doc: Document, chunk_size: int = 1000, chunk_overlap: int = 200):
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap, add_start_index=True)
+        print("My doc is: ", type(doc))
         splits = text_splitter.split_documents(doc)
         return splits
     
@@ -198,17 +213,18 @@ if __name__ == "__main__":
     file_path = Path("yolo.pdf")
     doc_reader = DocReader(file_path)
     doc = doc_reader.pdf_loader()
-    splits = doc_reader.split_text(doc)
-    vectorstore = doc_reader.create_vector_store(splits)
-    retriever = doc_reader.create_retriever(vectorstore)
-    llm = doc_reader.create_llm()
-    prompt = doc_reader.create_qa_prompt()
-    rag_chain = doc_reader.create_rag_chain_with_history(doc_reader.contextualized_question, retriever, doc_reader.format_docs, prompt, llm)
-    response_1 = doc_reader.ask_contextual_question(rag_chain, "What is Yolov7?")
-    response_2 = doc_reader.ask_contextual_question(rag_chain, "What are it's benefits?")
-    print(response_1)
-    print(response_2)
+    # splits = doc_reader.split_text(doc)
+    # vectorstore = doc_reader.create_vector_store(splits)
+    # retriever = doc_reader.create_retriever(vectorstore)
+    # llm = doc_reader.create_llm()
+    # prompt = doc_reader.create_qa_prompt()
+    # rag_chain = doc_reader.create_rag_chain_with_history(doc_reader.contextualized_question, retriever, doc_reader.format_docs, prompt, llm)
+    # response_1 = doc_reader.ask_contextual_question(rag_chain, "What is Yolov7?")
+    # response_2 = doc_reader.ask_contextual_question(rag_chain, "What are it's benefits?")
+    # print(response_1)
+    # print(response_2)
     print(doc)
+   
     
     
     

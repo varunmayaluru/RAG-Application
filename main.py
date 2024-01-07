@@ -39,20 +39,58 @@ def main():
             os.environ["QDRANT_COLLECTION_NAME"] = qdrant_collection_name
             QDRANT_COLLECTION_NAME = os.getenv("QDRANT_COLLECTION_NAME")
 
+        # docs = st.file_uploader(
+        #     "Upload your documents here and click on Process", type=["pdf", "txt", "docx"], accept_multiple_files=True)
+        # if st.button("Process"):
+        #     with st.spinner(text="Loading and indexing the docs - hang tight! This should take 1-2 minutes."):
+        #         if docs:
+        #             # Prepare the files in the correct format for the request
+        #             files = [("files", (file.name, file, file.type)) for file in docs]
+
+        #             # URL of your FastAPI endpoint
+        #             url = 'http://127.0.0.1:8000/pdf-reader'
+
+        #             # Make the request
+        #             response = requests.post(url, files=files)
+
+        #             # Handle the response
+        #             if response.status_code == 200:
+        #                 st.success('Files processed successfully!')
+        #                 # st.json(response.json())
+
+        #                 # Store the token
+        #                 st.session_state['token'] = response.json().get('token')
+                        
+                        
+        #             else:
+        #                 st.error('An error occurred while processing the files.')
+                        
+        #         else:
+        #             st.warning('Please upload at least one file.')
+
         docs = st.file_uploader(
             "Upload your documents here and click on Process", type=["pdf", "txt", "docx"], accept_multiple_files=True)
+
+        url = st.text_input("Or enter a URL here and click on Process", type  = "default")
+
         if st.button("Process"):
             with st.spinner(text="Loading and indexing the docs - hang tight! This should take 1-2 minutes."):
-                if docs:
+                if docs or url:
                     # Prepare the files in the correct format for the request
-                    files = [("files", (file.name, file, file.type)) for file in docs]
+                    files = [("files", (file.name, file, file.type)) for file in docs] if docs else []
+                    params = {
+                        "url": url
+                    } if url else {}
 
                     # URL of your FastAPI endpoint
-                    url = 'http://127.0.0.1:8000/pdf-reader'
+                    endpoint = 'http://127.0.0.1:8000/pdf-reader'
 
+                    
+                    # url = data.get('url')
+                    # print("URL is: ", url)
                     # Make the request
-                    response = requests.post(url, files=files)
-
+                    response = requests.post(endpoint, data = params ,files=files)
+                
                     # Handle the response
                     if response.status_code == 200:
                         st.success('Files processed successfully!')
@@ -60,13 +98,10 @@ def main():
 
                         # Store the token
                         st.session_state['token'] = response.json().get('token')
-                        
-                        
                     else:
                         st.error('An error occurred while processing the files.')
-                        
                 else:
-                    st.warning('Please upload at least one file.')
+                    st.warning('Please upload at least one file or enter a URL.')
     
     if 'messages' not in st.session_state:
         st.session_state.messages = []
