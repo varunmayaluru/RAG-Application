@@ -25,12 +25,7 @@ import requests
 from bs4 import BeautifulSoup
 from hashlib import md5
 
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 class DocReader:
 

@@ -1,14 +1,6 @@
 # import required libraries
 from fastapi import FastAPI
 from backend.application.routes.routes import pdf_reader_router
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-QDRANT_URL = os.getenv("QDRANT_URL")
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
 
 from fastapi import FastAPI

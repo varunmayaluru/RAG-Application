@@ -1,5 +1,5 @@
 import streamlit as st
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 # from app import app
 import requests
 # import FastAPI app from backend
@@ -10,7 +10,7 @@ import os
 
 def main():
     # global token
-    load_dotenv()
+    # load_dotenv()
     st.set_page_config(page_title="Chat with Your Document", page_icon = "📚")
 
     st.header("Chat with Your Multiple Documents")
@@ -79,8 +79,12 @@ def main():
                     # Prepare the files in the correct format for the request
                     files = [("files", (file.name, file, file.type)) for file in docs] if docs else []
                     params = {
-                        "url": url
-                    } if url else {}
+                        "url": url,
+                        "openai_api_key": openai_api_key,
+                        "qdrant_url": qdrant_url,
+                        "qdrant_api_key": qdrant_api_key,
+                        "qdrant_collection_name": qdrant_collection_name
+                    } 
 
                     # URL of your FastAPI endpoint
                     endpoint = 'http://127.0.0.1:8000/pdf-reader'

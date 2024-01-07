@@ -2,8 +2,6 @@ import hashlib
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 from typing import Optional
-from dotenv import load_dotenv
-import os
 import streamlit as st
 import uuid
 import requests
@@ -13,11 +11,6 @@ from typing import List
 from langchain.docstore.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-QDRANT_URL = os.getenv("QDRANT_URL")
-QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
 def get_hash_value(content: str) -> str:
     return hashlib.sha256(content.encode()).hexdigest()
