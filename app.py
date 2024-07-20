@@ -15,4 +15,5 @@ app.include_router(pdf_reader_router, tags=["PDF Reader"])
 
 # Run the API with uvicorn
 # uvicorn backend.app:app --reload --host
+# uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
